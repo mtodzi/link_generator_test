@@ -1,0 +1,23 @@
+# Composer dependencies
+/app/vendor/
+
+# Yii2 runtime and assets
+/app/runtime/
+/app/web/assets/*
+!/app/web/assets/.gitignore
+
+# Local configuration (optional, if you have local secrets)
+# /app/config/db-local.php
+# /app/config/params-local.php
+
+# Docker
+docker-compose.override.yml
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
