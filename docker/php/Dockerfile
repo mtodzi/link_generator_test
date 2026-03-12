@@ -17,3 +17,6 @@ RUN composer install --no-interaction --no-plugins --no-scripts --no-dev --optim
 
 # Копируем остальной код приложения
 COPY app/ .
+
+# Change ownership of the application directory to www-data so it can write to runtime/ and web/assets/
+RUN chown -R www-data:www-data /app
