@@ -12,7 +12,7 @@
 
 # Docker
 docker-compose.override.yml
-
+docker-compose.yml
 # IDE files
 .idea/
 .vscode/
