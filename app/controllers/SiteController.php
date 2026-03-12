@@ -11,6 +11,7 @@ use app\models\LoginForm;
 use app\models\ContactForm;
 use app\models\ShortLinkForm;
 use app\models\ShortLinks;
+use app\models\ShortLinkVisits;
 use yii\helpers\Url;
 use yii\web\NotFoundHttpException;
 use Endroid\QrCode\Builder\Builder;
@@ -242,9 +243,20 @@ class SiteController extends Controller
             throw new NotFoundHttpException('The requested page does not exist.');
         }
 
-        // Увеличиваем счетчик переходов
-        $shortLink->updateCounters(['visits' => 1]);
+        // Записываем информацию о переходе
+        $ip = Yii::$app->request->userIP;
+        $visit = ShortLinkVisits::findOne(['short_link_id' => $shortLink->id, 'ip_address' => $ip]);
 
+        if ($visit === null) {
+            $visit = new ShortLinkVisits([
+                'short_link_id' => $shortLink->id,
+                'ip_address' => $ip,
+            ]);
+            $visit->save();
+        } else {
+            $visit->updateCounters(['visits' => 1]);
+        }
+        
         return $this->redirect($shortLink->original_url);
     }
 }

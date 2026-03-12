@@ -11,12 +11,11 @@ use Yii;
  * @property string $original_url
  * @property string $short_code
  * @property string $created_at
- * @property int $visits
+ *
+ * @property ShortLinkVisits[] $shortLinkVisits
  */
 class ShortLinks extends \yii\db\ActiveRecord
 {
-
-
     /**
      * {@inheritdoc}
      */
@@ -31,10 +30,8 @@ class ShortLinks extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['visits'], 'default', 'value' => 0],
             [['original_url', 'short_code'], 'required'],
             [['created_at'], 'safe'],
-            [['visits'], 'integer'],
             [['original_url'], 'string', 'max' => 2048],
             [['short_code'], 'string', 'max' => 20],
             [['short_code'], 'unique'],
@@ -51,8 +48,26 @@ class ShortLinks extends \yii\db\ActiveRecord
             'original_url' => 'Original Url',
             'short_code' => 'Short Code',
             'created_at' => 'Created At',
-            'visits' => 'Visits',
         ];
     }
 
+    /**
+     * Gets query for [[ShortLinkVisits]].
+     *
+     * @return \yii\db\ActiveQuery
+     */
+    public function getShortLinkVisits()
+    {
+        return $this->hasMany(ShortLinkVisits::class, ['short_link_id' => 'id']);
+    }
+
+    /**
+     * Gets total visits count.
+     *
+     * @return int
+     */
+    public function getVisits()
+    {
+        return (int) $this->getShortLinkVisits()->sum('visits');
+    }
 }
