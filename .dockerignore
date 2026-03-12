@@ -1,0 +1,11 @@
+.git
+.gitignore
+.idea/
+.vscode/
+
+app/runtime/*
+app/web/assets/*
+
+docker-compose.yml
+docker-compose.override.yml
+docker-compose.prod.yml

@@ -1,37 +1,19 @@
-# docker/php/Dockerfile
-FROM php:8.1-fpm-alpine
+FROM yiisoftware/yii2-php:8.1-fpm
 
-# Аргументы для ID пользователя и группы, которые будут переданы из docker-compose
-ARG UID
-ARG GID
+# Образ yii2-php уже содержит много нужных расширений, включая pdo_mysql.
+# Если нужны дополнительные, их можно установить здесь. Например:
+# RUN install-php-extensions intl soap
+
+# Устанавливаем composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Создаем группу и пользователя с нужными ID, чтобы избежать проблем с правами на хост-машине.
-RUN addgroup -g $GID -S appgroup && adduser -u $UID -S appuser -G appgroup
+# Копируем composer файлы и устанавливаем зависимости.
+# Это кэширует зависимости, если файлы composer.* не меняются.
+COPY app/composer.json app/composer.lock ./
+RUN composer install --no-interaction --no-plugins --no-scripts --no-dev --optimize-autoloader
 
-# Устанавливаем системные зависимости, необходимые для расширений PHP
-RUN apk add --no-cache \
-    icu-dev \
-    libzip-dev \
-    git \
-    freetype-dev \
-    libjpeg-turbo-dev \
-    libpng-dev
-
-# Устанавливаем расширения PHP, которые часто требуются для Yii2
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install \
-    pdo_mysql \
-    intl \
-    zip \
-    opcache \
-    gd
-
-# Устанавливаем Composer, копируя его из официального образа
-COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
-
-# Изменяем конфигурацию пула FPM, чтобы он запускал воркеры от имени нашего нового пользователя
-RUN sed -i "s/user = www-data/user = appuser/g" /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i "s/group = www-data/group = appgroup/g" /usr/local/etc/php-fpm.d/www.conf
+# Копируем остальной код приложения
+COPY app/ .
