@@ -21,7 +21,6 @@ class m260311_151732_short_links extends Migration
             // Используем COLLATE utf8mb4_bin для чувствительности к регистру (aBc != abc)
             'short_code' => $this->string(20)->notNull()->append('COLLATE utf8mb4_bin'),
             'created_at' => $this->timestamp()->notNull()->defaultExpression('CURRENT_TIMESTAMP'),
-            'visits' => $this->integer()->notNull()->defaultValue(0),
         ], $tableOptions);
 
         // Уникальный индекс для мгновенного поиска по короткому коду
@@ -43,6 +42,31 @@ class m260311_151732_short_links extends Migration
                 'original_url'
             );
         }
+
+        $this->createTable('{{%short_link_visits}}', [
+            'id' => $this->primaryKey(),
+            'short_link_id' => $this->integer()->notNull(),
+            'ip_address' => $this->string(45)->notNull(),
+            'visits' => $this->integer()->notNull()->defaultValue(1),
+            'created_at' => $this->timestamp()->notNull()->defaultExpression('CURRENT_TIMESTAMP'),
+            'updated_at' => $this->timestamp()->notNull()->defaultExpression('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
+        ], $tableOptions);
+
+        $this->addForeignKey(
+            '{{%fk-short_link_visits-short_link_id}}',
+            '{{%short_link_visits}}',
+            'short_link_id',
+            '{{%short_links}}',
+            'id',
+            'CASCADE'
+        );
+
+        $this->createIndex(
+            '{{%idx-short_link_visits-link_id_ip_unique}}',
+            '{{%short_link_visits}}',
+            ['short_link_id', 'ip_address'],
+            true
+        );
     }
 
     /**
@@ -50,7 +74,15 @@ class m260311_151732_short_links extends Migration
      */
     public function safeDown()
     {
-       $this->dropTable('{{%short_links}}');
+        $this->dropForeignKey(
+            '{{%fk-short_link_visits-short_link_id}}',
+            '{{%short_link_visits}}'
+        );
+
+        $this->dropIndex('{{%idx-short_link_visits-link_id_ip_unique}}', '{{%short_link_visits}}');
+
+        $this->dropTable('{{%short_link_visits}}');
+        $this->dropTable('{{%short_links}}');
     }
 
 }
